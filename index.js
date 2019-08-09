@@ -2,6 +2,8 @@ const express = require('express')
 const Sse = require('json-sse')
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const Sequelize = require('sequelize')
+
 const port = process.env.PORT || 5000
 const app = express()
 
@@ -11,24 +13,43 @@ app.use(middleware)
 const jsonParser = bodyParser.json()
 app.use(jsonParser)
 
-const messages = ['Hello World']
-const data = JSON.stringify(messages)
+const databaseUrl = 'postgres://postgres:secret@localhost:5432/postgres'
+const db = new Sequelize(databaseUrl)
 
-const sse = new Sse(data)
+db
+    .sync( {force: false })
+    .then(() => console.log('Database synced'))
 
-app.get('/stream', sse.init)
+const Message = db.define(
+    'message',
+    {
+        text: Sequelize.STRING
+    }
+)
 
-app.post('/message', (req, res) => {
+const stream = new Sse()
+
+app.get('/stream', async (req, res) => {
+    const messages = await Message.findAll()
+    const data = JSON.stringify(messages)
+
+    stream.updateInit(data)
+    stream.init(req, res)
+})
+
+app.post('/message', async (req, res) => {
     const { message } = req.body
 
-    messages.push(message)
+    const entity = await Message.create( {text: message} )
+
+    const messages = await Message.findAll()
 
     const data = JSON.stringify(messages)
 
-    sse.updateInit(data)
-    sse.send(data)
-    
-    res.send(message)
+    stream.updateInit(data)
+    stream.send(data)
+
+    res.send(entity)
 })
 
 app.listen(port, () => console.log(`Listening on :${port}`))
