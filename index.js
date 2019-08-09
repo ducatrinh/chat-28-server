@@ -13,7 +13,7 @@ app.use(middleware)
 const jsonParser = bodyParser.json()
 app.use(jsonParser)
 
-const databaseUrl = 'postgres://postgres:secret@localhost:5432/postgres'
+const databaseUrl = process.env.DATABASE_URL || 'postgres://postgres:secret@localhost:5432/postgres'
 const db = new Sequelize(databaseUrl)
 
 db
