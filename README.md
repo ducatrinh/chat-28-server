@@ -1,6 +1,6 @@
 # Chat App Server
 
-#### You can check out the front-end repository for this project [here](https://github.com/ducatrinh/chat-app-client).
+You can check out the client side repository of this project [here](https://github.com/ducatrinh/chat-app-client).
 
 ## Technologies used
 
